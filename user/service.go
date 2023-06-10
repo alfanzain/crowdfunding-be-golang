@@ -1,9 +1,15 @@
 package user
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"errors"
+	"fmt"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 type Service interface {
 	Register(input RegisterInput) (User, error)
+	Login(input LoginInput) (User, error)
 }
 
 type service struct {
@@ -34,4 +40,27 @@ func (s *service) Register(input RegisterInput) (User, error) {
 	}
 
 	return savedUser, nil
+}
+
+func (s *service) Login(input LoginInput) (User, error) {
+	email := input.Email
+	password := input.Password
+
+	user, err := s.repository.FindByEmail(email)
+	fmt.Println(user)
+
+	if err != nil {
+		return user, err
+	}
+
+	if user.Id == 0 {
+		return user, errors.New("User not found")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
 }

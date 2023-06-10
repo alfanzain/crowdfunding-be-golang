@@ -7,15 +7,29 @@
 	},
 	"item": [
 		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{url_v1}}/login",
+					"host": [
+						"{{url_v1}}"
+					],
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Register",
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"exec": [
-							"pm.test(\"Successful POST request\", function () {",
-							"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
-							"});",
 							""
 						],
 						"type": "text/javascript"
@@ -27,7 +41,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"name\": \"Add your name in the body\"\n}",
+					"raw": "{\n\t\"name\": \"Alhaitham\",\n    \"occupation\": \"scribe\",\n    \"email\": \"alhaitham@genshinimpact.com\",\n    \"password\": \"password\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
