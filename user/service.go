@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -10,6 +9,7 @@ import (
 type Service interface {
 	Register(input RegisterInput) (User, error)
 	Login(input LoginInput) (User, error)
+	IsEmailAvailable(input CheckEmailInput) (bool, error)
 }
 
 type service struct {
@@ -47,7 +47,6 @@ func (s *service) Login(input LoginInput) (User, error) {
 	password := input.Password
 
 	user, err := s.repository.FindByEmail(email)
-	fmt.Println(user)
 
 	if err != nil {
 		return user, err
@@ -63,4 +62,16 @@ func (s *service) Login(input LoginInput) (User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *service) IsEmailAvailable(input CheckEmailInput) (bool, error) {
+	email := input.Email
+
+	user, err := s.repository.FindByEmail(email)
+
+	if err != nil {
+		return false, err
+	}
+
+	return user.Id == 0, nil
 }
