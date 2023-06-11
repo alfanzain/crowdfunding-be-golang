@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"crowdfunding/auth"
 	"crowdfunding/helper"
 	"crowdfunding/user"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,10 +12,11 @@ import (
 
 type userHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService: userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService: userService, authService: authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
@@ -90,7 +93,19 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
-	formatter := user.FormatUser(loggedOnUser, "tokentokentoken")
+	token, err := h.authService.GenerateToken(loggedOnUser.Id)
+	if err != nil {
+		response := helper.ApiResponse(
+			"Login failed",
+			http.StatusBadRequest,
+			"error",
+			nil,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := user.FormatUser(loggedOnUser, token)
 
 	response := helper.ApiResponse(
 		"Login successful",
@@ -146,6 +161,53 @@ func (h *userHandler) CheckEmailAvailability(c *gin.Context) {
 
 	response := helper.ApiResponse(
 		metaMessage,
+		http.StatusOK,
+		"success",
+		data,
+	)
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *userHandler) UploadAvatar(c *gin.Context) {
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.ApiResponse(
+			"Failed to upload avatar image",
+			http.StatusBadRequest,
+			"error",
+			data,
+		)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	currentUser := c.MustGet("currentUser").(user.User)
+	userId := currentUser.Id
+
+	path := fmt.Sprintf("images/%d-%s", userId, file.Filename)
+
+	c.SaveUploadedFile(file, path)
+
+	_, err = h.userService.StoreAvatar(userId, path)
+	if err != nil {
+		data := gin.H{"is_uploaded": false}
+		response := helper.ApiResponse(
+			"Failed to upload avatar image",
+			http.StatusBadRequest,
+			"error",
+			data,
+		)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	data := gin.H{"is_uploaded": true}
+	response := helper.ApiResponse(
+		"Avatar upload successful",
 		http.StatusOK,
 		"success",
 		data,
