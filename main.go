@@ -2,6 +2,7 @@ package main
 
 import (
 	"crowdfunding/auth"
+	"crowdfunding/campaign"
 	"crowdfunding/handler"
 	"crowdfunding/helper"
 	"crowdfunding/user"
@@ -25,6 +26,7 @@ func main() {
 	}
 
 	userRepository := user.NewRepository(db)
+	campaignRepository := campaign.NewRepository(db)
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 
